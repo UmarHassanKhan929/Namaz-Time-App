@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/namaz_time_tile.dart';
 
 class Timings extends StatefulWidget {
   const Timings({Key? key}) : super(key: key);
@@ -12,24 +14,58 @@ class Timings extends StatefulWidget {
 
 class _TimingsState extends State<Timings> {
   final _cityController = TextEditingController();
-  var _fetchedData = <String, dynamic>{};
+  var _fetchedData = {};
   var _isLoading = false;
-  late Map<String, dynamic> apiData;
+  late Object apiData;
+
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   Future<void> _submitForm() async {
+    final SharedPreferences prefs = await _prefs;
+
     if (!_isLoading) {
       setState(() {
         _isLoading = true;
       });
     }
 
-    final response = await http.get(Uri.parse(
-        'https://dailyprayer.abdulrcs.repl.co/api/${_cityController.text.trim()}'));
-    final reponseData = await jsonDecode(response.body);
+    if (apiData.toString().isEmpty || _cityController.text.isNotEmpty) {
+      final response = await http.get(Uri.parse(
+          'https://dailyprayer.abdulrcs.repl.co/api/${_cityController.text.trim()}'));
+      final reponseData = await jsonDecode(response.body);
+      final encodedData = jsonEncode(reponseData);
+      prefs.setString('apiData', encodedData);
+
+      setState(() {
+        _isLoading = false;
+        _fetchedData = reponseData;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+        _fetchedData = apiData as Map<String, dynamic>;
+      });
+    }
+  }
+
+  Future<void> setCache() async {
+    final SharedPreferences prefs = await _prefs;
+    apiData = jsonDecode(prefs.getString('apiData') ?? {}.toString());
     setState(() {
-      _isLoading = false;
-      _fetchedData = reponseData;
+      _fetchedData = apiData as Map<String, dynamic>;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    setCache();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   @override
@@ -141,47 +177,6 @@ class _TimingsState extends State<Timings> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class NamazTime extends StatelessWidget {
-  NamazTime({
-    required this.namaz,
-    required this.timefetched,
-  }) {
-    time = TimeOfDay(
-        hour: int.parse(timefetched.split(":")[0]),
-        minute: int.parse(timefetched.split(":")[1]));
-  }
-
-  final String namaz;
-  final String timefetched;
-
-  late TimeOfDay time;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          namaz,
-          style: const TextStyle(
-            fontSize: 28,
-            color: Color.fromARGB(255, 58, 85, 106),
-            fontWeight: FontWeight.w300,
-          ),
-        ),
-        Text(
-          time.format(context),
-          style: const TextStyle(
-            fontSize: 28,
-            color: Color.fromARGB(255, 58, 85, 106),
-            fontWeight: FontWeight.w300,
-          ),
-        ),
-      ],
     );
   }
 }

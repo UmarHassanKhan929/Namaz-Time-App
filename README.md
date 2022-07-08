@@ -17,6 +17,6 @@ API used for namaz times <a href="https://github.com/abdulrcs/Daily-Prayer-Time-
 
 
 
-For Compass used a href="https://github.com/medyas/flutter_qiblah">Flutter Qiblah</a>
+For Compass used <a href="https://github.com/medyas/flutter_qiblah">Flutter Qiblah</a>
 
 

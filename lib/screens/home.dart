@@ -32,6 +32,7 @@ class _HomeState extends State<Home> {
       ),
       floatingActionButton: FloatingActionButton.large(
         child: const Icon(Icons.mosque_rounded),
+        backgroundColor: Theme.of(context).primaryColor,
         onPressed: () {
           setState(() {
             currentTab = 0;
